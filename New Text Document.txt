@@ -1,0 +1,63 @@
+Q)1) Write a Solidity Smart Contract for a Complete ERC721
+Smart Contract where you can perform Minting the NFT
+by paying in Ethers, Limiting the supply of NFT’s,
+Allowing list functionality, Modifying the Minting
+functionality, Withdrawing functionality, and, clean up
+code by using internalMint() function.
+
+Ans:-// SPDX-License-Identifier: MIT
+
+pragma solidity ^ 0.8.21;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract CustomNFT is ERC721, Ownable {
+    uint256 public maxsupply;
+    uint public totalMinted;
+    uint public mintPrice;
+    mapping(address => bool) public whitelist;
+
+    constructor (  string memory _name,
+        string memory _symbol,
+        uint256 maxsupply,
+        uint256 _mintprice)
+      
+    
+    ERC721(_name,_symbol){
+        maxsupply = _maxsupply;
+        mintPrice = _mintprice;
+
+    }
+    function addToWhitelist(address _address)external onlyOwner{
+        whitelist[_address] = true;
+
+    }
+    function removeFromWhitelist(address _address) external onlyOwner{
+        whitelist[_address] = true;
+
+    }
+    function mintNFT() external payable {
+        require(totalMinted < maxsupply,"Max supply reached");
+        require (whitelist[msg.sender],"Not Whitelisted");
+        require(msg.value >= mintPrice,"Insufficient payment");
+
+        totalMinted++;
+        internalMint(msg.sender);
+
+        if(msg.value > mintPrice){
+            payable(msg.sender)transfer(msg.value-mintPrice);
+        }
+    }
+    function internalMint(address _to) internal {
+        uint256 tokenId = totalMinted;
+        _mint(_to,tokenId);
+    }
+    function setMintPrice(uint256 _newPrice) external onlyOwner{
+        mintPrice = _newPrice;
+
+    }
+    function withdrawFunds() external onlyOwner{
+        payable(owner()).transfer(address(this).balance);
+    }
+}
